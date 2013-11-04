@@ -1432,6 +1432,13 @@ void btm_vsc_complete (UINT8 *p, UINT16 opcode, UINT16 evt_len,
 {
     tBTM_VSC_CMPL   vcs_cplt_params;
 
+    if (p_vsc_cplt_cback) {
+	/*To do:*/
+	APPL_TRACE_DEBUG1("Vendor Spec HCI Commands %x Complete Event  Ignored",
+		vcs_cplt_params.opcode);
+	return;
+    }
+
     /* If there was a callback address for vcs complete, call it */
     if (p_vsc_cplt_cback)
     {
@@ -1574,6 +1581,42 @@ tBTM_STATUS BTM_WriteVoiceSettings(UINT16 settings)
         return (BTM_SUCCESS);
 
     return (BTM_NO_RESOURCES);
+}
+
+/*******************************************************************************
+**
+** Function         config_mrvl_sd8787_voice
+**
+** Description      Send HCI PCM Settings command.
+**                  Called When Create SCO Connection
+**
+** Returns
+**      TRUE        Command sent.
+**      FALSE       Command sent failed.
+**
+**
+*******************************************************************************/
+BOOLEAN config_mrvl_sd8787_voice(void) {
+
+	/* config voice path as pcm */
+	if (!btsnd_hcic_set_pcm_voice_path()) {
+		APPL_TRACE_ERROR0 ("config_mrvl_sd8787_voice: set_pcm_voice failed");
+		return (FALSE);
+	}
+
+	/* cofig pcm sync */
+	if (!btsnd_hcic_set_pcm_sync()) {
+		APPL_TRACE_ERROR0 ("config_mrvl_sd8787_voice: set_pcm_sync failed");
+		return (FALSE);
+	}
+
+	/* config sd8787 as pcm master */
+	if (!btsnd_hcic_set_pcm_mode()) {
+		APPL_TRACE_ERROR0 ("config_mrvl_sd8787_voice: set_pcm_mode failed");
+		return (FALSE);
+	}
+
+	return (TRUE);
 }
 
 /*******************************************************************************

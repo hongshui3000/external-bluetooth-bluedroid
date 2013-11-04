@@ -169,7 +169,7 @@ BTU_API UINT32 btu_task (UINT32 param)
 
 #if (defined(HCISU_H4_INCLUDED) && HCISU_H4_INCLUDED == TRUE)
     /* wait an event that HCISU is ready */
-    GKI_wait(0xFFFF, 0);
+    GKI_wait(0xFFFF, 10000);
 #endif
     /* Initialize the mandatory core stack control blocks
        (BTU, BTM, L2CAP, and SDP)

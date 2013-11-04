@@ -458,6 +458,7 @@ enum
 /*    BTM_EIR_UUID_SERVCLASS_HDP_PROFILE                */
     BTM_EIR_UUID_SERVCLASS_MESSAGE_ACCESS,
     BTM_EIR_UUID_SERVCLASS_MESSAGE_NOTIFICATION,
+    BTM_EIR_UUID_SERVCLASS_MAP_PROFILE,
     BTM_EIR_UUID_SERVCLASS_HDP_SOURCE,
     BTM_EIR_UUID_SERVCLASS_HDP_SINK,
     BTM_EIR_MAX_SERVICES
@@ -2300,6 +2301,7 @@ BTM_API extern BOOLEAN BTM_TryAllocateSCN(UINT8 scn);
 **
 *******************************************************************************/
     BTM_API extern tBTM_STATUS BTM_WriteVoiceSettings(UINT16 settings);
+    BTM_API extern BOOLEAN config_mrvl_sd8787_voice(void);
 
 /*******************************************************************************
 **

@@ -1633,6 +1633,9 @@ bt_status_t btif_dm_get_adapter_property(bt_property_t *prop)
         {
             bt_bdname_t *bd_name = (bt_bdname_t*)prop->val;
             strcpy((char *)bd_name->name, (char *)BTM_DEF_LOCAL_NAME);
+            // if the name is empty, then set it as the value of ro.product.model
+            if (strlen((char*)bd_name->name) == 0)
+                property_get("ro.product.model", (char*)bd_name->name, "");
             prop->len = strlen((char *)bd_name->name);
         }
         break;

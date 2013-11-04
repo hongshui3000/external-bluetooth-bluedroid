@@ -1003,6 +1003,11 @@ typedef struct
 
 #define HCIT_LM_DIAG_LENGTH 63
 
+/*Mrvl HCI commands for PCM settings*/
+#define HCI_MRVL_PCM_VOICE_PATH	(0x001d | HCI_GRP_VENDOR_SPECIFIC)
+#define HCI_MRVL_PCM_SYNC	(0x0028 | HCI_GRP_VENDOR_SPECIFIC)
+#define HCI_MRVL_PCM_MODE	(0x0007 | HCI_GRP_VENDOR_SPECIFIC)
+
 /* Parameter information for HCI_BRCM_SET_ACL_PRIORITY */
 #define HCI_BRCM_ACL_PRIORITY_PARAM_SIZE    3
 #define HCI_BRCM_ACL_PRIORITY_LOW           0x00

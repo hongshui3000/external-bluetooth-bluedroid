@@ -56,6 +56,8 @@
 
 #define RESERVED_SCN_PBS 19
 #define RESERVED_SCN_OPS 12
+#define RESERVED_SCN_FTS 13
+#define RESERVED_SCN_MAS 14
 
 #define UUID_MAX_LENGTH 16
 
@@ -305,6 +307,152 @@ static int add_ops_sdp(const char *p_service_name,int scn)
 
     return sdp_handle;
 }
+
+static int add_ftp_sdp(const char *p_service_name,int scn)
+{
+    tSDP_PROTOCOL_ELEM  protoList [BTA_OPS_PROTOCOL_COUNT];
+    UINT16      servclass = UUID_SERVCLASS_OBEX_FILE_TRANSFER;
+    int         i, j;
+    tBTA_UTL_COD cod;
+    UINT8       desc_type[BTA_OPS_NUM_FMTS];
+    UINT8       type_len[BTA_OPS_NUM_FMTS];
+    UINT8       *type_value[BTA_OPS_NUM_FMTS];
+    UINT16      browse;
+    UINT32 sdp_handle;
+    tBTA_OP_FMT_MASK    formats = BTUI_OPS_FORMATS;
+
+    APPL_TRACE_DEBUG3("%s: scn %d, service name %s", __FUNCTION__, scn, p_service_name);
+
+    sdp_handle = SDP_CreateRecord();
+
+    /* add service class */
+    if (SDP_AddServiceClassIdList(sdp_handle, 1, &servclass))
+    {
+        /* add protocol list, including RFCOMM scn */
+        protoList[0].protocol_uuid = UUID_PROTOCOL_L2CAP;
+        protoList[0].num_params = 0;
+        protoList[1].protocol_uuid = UUID_PROTOCOL_RFCOMM;
+        protoList[1].num_params = 1;
+        protoList[1].params[0] = scn;
+        protoList[2].protocol_uuid = UUID_PROTOCOL_OBEX;
+        protoList[2].num_params = 0;
+
+        if (SDP_AddProtocolList(sdp_handle, BTA_OPS_PROTOCOL_COUNT, protoList))
+        {
+            SDP_AddAttribute(sdp_handle,
+               (UINT16)ATTR_ID_SERVICE_NAME,
+                (UINT8)TEXT_STR_DESC_TYPE,
+                (UINT32)(strlen(p_service_name) + 1),
+                (UINT8 *)p_service_name);
+
+            SDP_AddProfileDescriptorList(sdp_handle,
+                UUID_SERVCLASS_OBEX_FILE_TRANSFER,
+                0x0100);
+        }
+    }
+
+    /* Make the service browseable */
+    browse = UUID_SERVCLASS_PUBLIC_BROWSE_GROUP;
+    SDP_AddUuidSequence (sdp_handle, ATTR_ID_BROWSE_GROUP_LIST, 1, &browse);
+
+    /* add sequence for supported types */
+    for (i = 0, j = 0; i < BTA_OPS_NUM_FMTS; i++)
+    {
+        if ((formats >> i) & 1)
+        {
+            type_value[j] = (UINT8 *) &bta_ops_obj_fmt[i];
+            desc_type[j] = UINT_DESC_TYPE;
+            type_len[j++] = 1;
+        }
+    }
+
+    SDP_AddSequence(sdp_handle, (UINT16) ATTR_ID_SUPPORTED_FORMATS_LIST,
+        (UINT8) j, desc_type, type_len, type_value);
+
+    /* set class of device */
+    cod.service = BTM_COD_SERVICE_OBJ_TRANSFER;
+    utl_set_device_class(&cod, BTA_UTL_SET_COD_SERVICE_CLASS);
+
+    bta_sys_add_uuid(servclass); /* UUID_SERVCLASS_OBEX_FILE_TRANSFER */
+
+    return sdp_handle;
+}
+
+static int add_map_sdp(const char *p_service_name,int scn)
+{
+    tSDP_PROTOCOL_ELEM  protoList [BTA_OPS_PROTOCOL_COUNT];
+    UINT16      servclass = UUID_SERVCLASS_MESSAGE_ACCESS;
+    BOOLEAN             status = FALSE;
+    UINT16      browse = (UINT16)UUID_SERVCLASS_PUBLIC_BROWSE_GROUP;
+    UINT32 sdp_handle;
+    UINT8 mas_instance[] = { 0x00 };
+    UINT8 formats[] = { 0x0e };
+
+    APPL_TRACE_DEBUG2("add_map_sdp: cn %d, service name %s", scn, p_service_name);
+
+    if ((sdp_handle = SDP_CreateRecord()) == 0)
+    {
+        APPL_TRACE_ERROR0("MAP SDP: Unable to register MAP Service");
+        return sdp_handle;
+    }
+
+    /* add service class */
+    if (SDP_AddServiceClassIdList(sdp_handle, (UINT16)1, &servclass))
+    {
+        memset( protoList, 0 , BTA_OPS_PROTOCOL_COUNT*sizeof(tSDP_PROTOCOL_ELEM) );
+        /* add protocol list, including RFCOMM scn */
+        protoList[0].protocol_uuid = UUID_PROTOCOL_L2CAP;
+        protoList[0].num_params = (UINT16)0;
+        protoList[1].protocol_uuid = UUID_PROTOCOL_RFCOMM;
+        protoList[1].num_params = (UINT16)1;
+        protoList[1].params[0] = (UINT8)scn;
+        protoList[2].protocol_uuid = UUID_PROTOCOL_OBEX;
+        protoList[2].num_params = (UINT16)0;
+
+        if (SDP_AddProtocolList(sdp_handle, (UINT16)BTA_OPS_PROTOCOL_COUNT, protoList))
+        {
+            status = TRUE;  /* All mandatory fields were successful */
+
+            SDP_AddAttribute(sdp_handle,
+                (UINT16)ATTR_ID_SERVICE_NAME,
+                (UINT8)TEXT_STR_DESC_TYPE,
+                (UINT32)(strlen(p_service_name) + 1),
+                (UINT8 *)p_service_name);
+
+            SDP_AddProfileDescriptorList(sdp_handle,
+                (UINT16)UUID_SERVCLASS_MAP_PROFILE,
+                (UINT16)0x0100);
+        }
+    }
+
+    /* add MASInstanceID and supported Msg type */
+    if (status)
+    {
+        SDP_AddAttribute(sdp_handle, ATTR_ID_MAS_INSTANCE_ID, UINT_DESC_TYPE,
+                      (UINT32)1, (UINT8*)mas_instance);
+                  
+        SDP_AddAttribute(sdp_handle, ATTR_ID_SUPPORTED_MSG_TYPE, UINT_DESC_TYPE,
+                      (UINT32)1, (UINT8*)formats);
+
+        /* Make the service browseable */
+        SDP_AddUuidSequence (sdp_handle, (UINT16)ATTR_ID_BROWSE_GROUP_LIST, (UINT16)1, &browse);
+    }
+
+    if (!status)
+    {
+        SDP_DeleteRecord(sdp_handle);
+        sdp_handle = 0;
+        APPL_TRACE_ERROR0("bta_map_sdp_register FAILED");
+    }
+    else
+    {
+        bta_sys_add_uuid(servclass);  /* UUID_SERVCLASS_MESSAGE_ACCESS */
+        APPL_TRACE_DEBUG1("MAP:  SDP Registered (handle 0x%08x)", sdp_handle);
+    }
+
+    return sdp_handle;
+}
+
 #define SPP_NUM_PROTO_ELEMS 2
 static int add_spp_sdp(const char *service_name, int scn)
 {
@@ -382,6 +530,14 @@ static int add_rfc_sdp_by_uuid(const char* name, const uint8_t* uuid, int scn)
     {
         handle = add_spp_sdp(name, final_scn);
     }
+    else if (IS_UUID(UUID_FTP, uuid))
+    {
+        handle = add_ftp_sdp(name, final_scn);
+    }
+    else if (IS_UUID(UUID_MAP, uuid))
+    {
+        handle = add_map_sdp(name, final_scn);
+    }
     else
     {
         handle = add_sdp_by_uuid(name, uuid, final_scn);
@@ -395,6 +551,8 @@ BOOLEAN is_reserved_rfc_channel(int scn)
     {
         case RESERVED_SCN_PBS:
         case RESERVED_SCN_OPS:
+        case RESERVED_SCN_FTS:
+        case RESERVED_SCN_MAS:
             return TRUE;
     }
     return FALSE;
@@ -411,6 +569,14 @@ int get_reserved_rfc_channel (const uint8_t* uuid)
     {
       return RESERVED_SCN_OPS;
     }
+    else if (IS_UUID(UUID_FTP, uuid))
+    {
+      return RESERVED_SCN_FTS;
+    }
+    else if (IS_UUID(UUID_MAP, uuid))
+    {
+      return RESERVED_SCN_MAS;
+    }
     return -1;
 }
 
@@ -424,8 +590,14 @@ int add_rfc_sdp_rec(const char* name, const uint8_t* uuid, int scn)
             case RESERVED_SCN_PBS: // PBAP Reserved port
                 uuid = UUID_PBAP_PSE;
                 break;
-             case RESERVED_SCN_OPS:
+            case RESERVED_SCN_OPS:
                 uuid = UUID_OBEX_OBJECT_PUSH;
+                break;
+            case RESERVED_SCN_FTS:
+                uuid = UUID_FTP;
+                break;
+            case RESERVED_SCN_MAS:
+                uuid = UUID_MAP;
                 break;
             default:
                 uuid = UUID_SPP;

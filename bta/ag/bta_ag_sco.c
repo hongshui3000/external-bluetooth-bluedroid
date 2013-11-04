@@ -563,6 +563,9 @@ static void bta_ag_create_sco(tBTA_AG_SCB *p_scb, BOOLEAN is_orig)
 
     p_bd_addr = p_scb->peer_addr;
 
+    if(config_mrvl_sd8787_voice())
+	APPL_TRACE_DEBUG0("Complete 8787 PCM Settings");
+
     status = BTM_CreateSco(p_bd_addr, is_orig, params.packet_types,
                            &p_scb->sco_idx, bta_ag_sco_conn_cback,
                            bta_ag_sco_disc_cback);

@@ -121,6 +121,7 @@ const UINT16 BTM_EIR_UUID_LKUP_TBL[BTM_EIR_MAX_SERVICES] =
 /*    UUID_SERVCLASS_VIDEO_DISTRIBUTION         */
     UUID_SERVCLASS_MESSAGE_ACCESS,
     UUID_SERVCLASS_MESSAGE_NOTIFICATION,
+    UUID_SERVCLASS_MAP_PROFILE,
     UUID_SERVCLASS_HDP_SOURCE,
     UUID_SERVCLASS_HDP_SINK
 };
@@ -1010,7 +1011,7 @@ tBTM_STATUS  BTM_CancelRemoteDeviceName (void)
     BTM_TRACE_API0 ("BTM_CancelRemoteDeviceName()");
 
     /* Make sure there is not already one in progress */
-    if (p_inq->remname_active)
+    if (p_inq->remname_active && (btm_cb.pairing_state != BTM_PAIR_STATE_GET_REM_NAME))
     {
 #if BLE_INCLUDED == TRUE
         BTM_ReadDevInfo(p_inq->remname_bda, &dev_type, &addr_type);

@@ -3359,3 +3359,98 @@ BOOLEAN btsnd_hcic_nop (void)
     return (TRUE);
 }
 
+/**** config_mrvl_sd8787_voice Commands ****/
+BOOLEAN btsnd_hcic_set_pcm_voice_path(void) {
+	BT_HDR *p;
+	UINT8 *pp;
+	UINT8 voice_path = 0x01;
+
+
+	if ((p = HCI_GET_CMD_BUF(HCIC_PARAM_SIZE_WRITE_PARAM1)) == NULL)
+		return (FALSE);
+
+	pp = (UINT8 *)(p + 1);
+
+	p->len    = HCIC_PREAMBLE_SIZE + HCIC_PARAM_SIZE_WRITE_PARAM1;
+	p->offset = 0;
+
+	UINT16_TO_STREAM (pp, HCI_MRVL_PCM_VOICE_PATH);
+	UINT8_TO_STREAM  (pp, HCIC_PARAM_SIZE_WRITE_PARAM1);
+
+	UINT8_TO_STREAM (pp, voice_path);
+
+	btu_hcif_send_cmd (LOCAL_BR_EDR_CONTROLLER_ID,  p);
+	return (TRUE);
+
+}
+
+BOOLEAN btsnd_hcic_set_pcm_sync(void) {
+	BT_HDR *p;
+	UINT8 *pp;
+        char pcmmaster[2];
+	UINT8 pcm_sync[3] = {0x03, 0x00, 0x00};
+
+        memset(pcmmaster, 0, 2);
+        property_get("persist.bt.pcmmaster", pcmmaster, "1");
+        if (strcmp(pcmmaster, "0") == 0)
+        {
+                pcm_sync[2] = 0x0;
+        }
+        else
+        {
+                pcm_sync[2] = 0x3;
+        }
+
+	if ((p = HCI_GET_CMD_BUF(HCIC_PARAM_SIZE_WRITE_PARAM3)) == NULL)
+		return (FALSE);
+
+	pp = (UINT8 *)(p + 1);
+
+	p->len    = HCIC_PREAMBLE_SIZE + HCIC_PARAM_SIZE_WRITE_PARAM3;
+	p->offset = 0;
+
+	UINT16_TO_STREAM (pp, HCI_MRVL_PCM_SYNC);
+	UINT8_TO_STREAM  (pp, HCIC_PARAM_SIZE_WRITE_PARAM3);
+
+	UINT8_TO_STREAM (pp, pcm_sync[0]);
+	UINT8_TO_STREAM (pp, pcm_sync[1]);
+	UINT8_TO_STREAM (pp, pcm_sync[2]);
+
+	btu_hcif_send_cmd (LOCAL_BR_EDR_CONTROLLER_ID,  p);
+	return (TRUE);
+}
+
+BOOLEAN btsnd_hcic_set_pcm_mode(void) {
+	BT_HDR *p;
+	UINT8 *pp;
+	UINT8 pcm_mode;
+
+        char pcmmaster[2];
+        memset(pcmmaster, 0, 2);
+        property_get("persist.bt.pcmmaster", pcmmaster, "1");
+	if (strcmp(pcmmaster, "0") == 0)
+	{
+		pcm_mode = 0x0;
+	}
+	else
+	{
+		pcm_mode = 0x2;
+	}
+
+	if ((p = HCI_GET_CMD_BUF(HCIC_PARAM_SIZE_WRITE_PARAM1)) == NULL)
+		return (FALSE);
+
+	pp = (UINT8 *)(p + 1);
+
+	p->len    = HCIC_PREAMBLE_SIZE + HCIC_PARAM_SIZE_WRITE_PARAM1;
+	p->offset = 0;
+
+	UINT16_TO_STREAM (pp, HCI_MRVL_PCM_MODE);
+	UINT8_TO_STREAM  (pp, HCIC_PARAM_SIZE_WRITE_PARAM1);
+
+	UINT8_TO_STREAM (pp, pcm_mode);
+
+	btu_hcif_send_cmd (LOCAL_BR_EDR_CONTROLLER_ID,  p);
+	return (TRUE);
+}
+/**** end of config mrvl sd8787 Commands ****/

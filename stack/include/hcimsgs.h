@@ -751,6 +751,9 @@ HCI_API extern BOOLEAN btsnd_hcic_read_dev_class(void);                         
 HCI_API extern BOOLEAN btsnd_hcic_write_dev_class(DEV_CLASS dev);                /* Write Class of Device */
 HCI_API extern BOOLEAN btsnd_hcic_read_voice_settings(void);                     /* Read Voice Settings */
 HCI_API extern BOOLEAN btsnd_hcic_write_voice_settings(UINT16 flags);            /* Write Voice Settings */
+HCI_API extern BOOLEAN btsnd_hcic_set_pcm_voice_path(void);			 /* Set PCM Voice Path*/
+HCI_API extern BOOLEAN btsnd_hcic_set_pcm_sync(void);				 /* Set PCM Sync*/
+HCI_API extern BOOLEAN btsnd_hcic_set_pcm_mode(void);				 /* Set PCM Mode Master*/
 
 /* Host Controller to Host flow control */
 #define HCI_HOST_FLOW_CTRL_OFF          0

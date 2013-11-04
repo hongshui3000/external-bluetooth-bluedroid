@@ -407,6 +407,7 @@ int HAL_load(void)
     err = hw_get_module(BT_HARDWARE_MODULE_ID, (hw_module_t const**)&module);
     if (err == 0)
     {
+        bdt_log("hw_get_module (%d)", strerror(err));
         err = module->methods->open(module, BT_HARDWARE_MODULE_ID, &device);
         if (err == 0) {
             bt_device = (bluetooth_device_t *)device;
@@ -544,6 +545,90 @@ void bdt_cleanup(void)
     sBtInterface->cleanup();
 }
 
+void bdt_discovery(void)
+{
+    bdt_log("START_DISCOVERY");
+    status = sBtInterface->start_discovery();
+
+    check_return_status(status);
+}
+
+void bdt_get_adapter_properties(void)
+{
+    bdt_log("GET_ADAPTER_PROPERTIES");
+    status = sBtInterface->get_adapter_properties();
+
+    check_return_status(status);
+}
+
+void bdt_get_adapter_property_scan_mode(void)
+{
+    bdt_log("GET_ADAPTER_PROPERTY_SCAN_MODE");
+    status = sBtInterface->get_adapter_property(BT_PROPERTY_ADAPTER_SCAN_MODE);
+
+    check_return_status(status);
+}
+
+void bdt_create_bond(void)
+{
+    bt_bdaddr_t bd_addr;
+    bd_addr.address[0] = 0xCC;
+    bd_addr.address[1] = 0x8C;
+    bd_addr.address[2] = 0xE3;
+    bd_addr.address[3] = 0x36;
+    bd_addr.address[4] = 0xBE;
+    bd_addr.address[5] = 0x1C;
+    bdt_log("CREATE BOND");
+    status = sBtInterface->create_bond(&bd_addr);
+
+    check_return_status(status);
+}
+
+void bdt_cancel_bond(void)
+{
+    bt_bdaddr_t bd_addr;
+    bd_addr.address[0] = 0xCC;
+    bd_addr.address[1] = 0x8C;
+    bd_addr.address[2] = 0xE3;
+    bd_addr.address[3] = 0x36;
+    bd_addr.address[4] = 0xBE;
+    bd_addr.address[5] = 0x1C;
+    bdt_log("CANCEL BOND");
+    status = sBtInterface->cancel_bond(&bd_addr);
+
+    check_return_status(status);
+}
+
+void bdt_reply_pin(void)
+{
+    bt_bdaddr_t bd_addr;
+    bd_addr.address[0] = 0xCC;
+    bd_addr.address[1] = 0x8C;
+    bd_addr.address[2] = 0xE3;
+    bd_addr.address[3] = 0x36;
+    bd_addr.address[4] = 0xBE;
+    bd_addr.address[5] = 0x1C;
+    bdt_log("Reply Pin");
+    status = sBtInterface->pin_reply(&bd_addr,1,0,0);
+
+    check_return_status(status);
+    }
+
+void bdt_ssp_reply(void)
+{
+    bt_bdaddr_t bd_addr;
+    bd_addr.address[0] = 0xCC;
+    bd_addr.address[1] = 0x8C;
+    bd_addr.address[2] = 0xE3;
+    bd_addr.address[3] = 0x36;
+    bd_addr.address[4] = 0xBE;
+    bd_addr.address[5] = 0x1C;
+    bdt_log("SSP_REPLY");
+    status = sBtInterface->ssp_reply(&bd_addr,BT_SSP_VARIANT_PASSKEY_CONFIRMATION,1,0);
+
+    check_return_status(status);
+    }
+
 /*******************************************************************************
  ** Console commands
  *******************************************************************************/
@@ -600,6 +685,41 @@ void do_cleanup(char *p)
     bdt_cleanup();
 }
 
+void do_discovery(char *p)
+{
+    bdt_discovery();
+}
+
+void do_get_adapter_properties(char *p)
+{
+    bdt_get_adapter_properties();
+}
+
+void do_get_adapter_property_scan_mode(char *p)
+{
+    bdt_get_adapter_property_scan_mode();
+}
+
+void do_create_bond(char *p)
+{
+    bdt_create_bond();
+}
+
+void do_cancel_bond(char *p)
+{
+    bdt_cancel_bond();
+}
+
+void do_reply_pin(char *p)
+{
+    bdt_reply_pin();
+}
+
+void do_ssp_reply(char *p)
+{
+    bdt_ssp_reply();
+}
+
 /*******************************************************************
  *
  *  CONSOLE COMMAND TABLE
@@ -623,6 +743,13 @@ const t_cmd console_cmd_list[] =
     { "enable", do_enable, ":: enables bluetooth", 0 },
     { "disable", do_disable, ":: disables bluetooth", 0 },
     { "dut_mode_configure", do_dut_mode_configure, ":: DUT mode - 1 to enter,0 to exit", 0 },
+    { "discovery", do_discovery, ":: discovery bluetooth devices", 0 },
+    { "getproperties", do_get_adapter_properties, ":: get  bluetooth adapter properties", 0 },
+    { "getscanmode", do_get_adapter_property_scan_mode, ":: get local bluetooth adapter scan mode property", 0 },
+    { "createbond", do_create_bond, ":: create bond with other bluetooth device", 0 },
+    { "cancelbond", do_cancel_bond, ":: cancel bond with the paired bluetooth device", 0 },
+    { "sspreply", do_ssp_reply, ":: do_ssp_reply", 0 },
+    { "cleanup", do_cleanup, ":: cleanup bluetooth", 0 },
 
     /* add here */
 
